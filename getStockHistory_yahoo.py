@@ -8,13 +8,11 @@ import webbrowser
 import time
 
 def downloadHistory(stock_no):
-    url = r"https://query1.finance.yahoo.com/v7/finance/download/{}.TW?period1=946656000&period2=1572710400&interval=1d&events=history&crumb=t/XHPSAFTad".format(stock_no)
-    webbrowser.open(url, new = 0)
-
-webbrowser.open('google.com', new = 0)
+    url = r"https://finance.yahoo.com/quote/{}.TW/history?period1=726163200&period2=1572796800&interval=1d&filter=history&frequency=1d".format(stock_no)
+    print(url)
+    webbrowser.open(url, new = 0, autoraise=False)
 
 listDji = [2317]
-
 
 for i in range(len(listDji)):
     try:
