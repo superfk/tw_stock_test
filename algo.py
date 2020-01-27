@@ -127,8 +127,9 @@ def strategy2(KD_df):
 
 if __name__=='__main__':
     # 匯入資料，把csv檔(連結下方)放到與程式檔同一資料夾
-    stock_no = 2353
-    df = pd.read_csv('finished\\{}.TW.csv'.format(stock_no), parse_dates=['Date'], index_col=0).dropna()
+    stock_no = 2317
+    # df = pd.read_csv('finished\\{}.TW.csv'.format(stock_no), parse_dates=['Date'], index_col=0).dropna()
+    df = pd.read_csv('2317.TW_wk.csv', parse_dates=['Date'], index_col=0).dropna()
     df = df[(df.index > '2000-01-01')]
     df_plot = df[['Open','High','Low','Close']]
     daysreshape = prepare_data(df_plot)

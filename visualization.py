@@ -4,12 +4,7 @@ import plotly.graph_objects as go
 import os
 import glob
 
-
-def visualPrice(stock_no, autoshow=True, save2html=True):
-
-    fileName = '{}.TW'.format(stock_no)
-    df = pd.read_csv('finished/{}.csv'.format(fileName))  
-    df = df.dropna()
+def plotPrice(df, stock_no='', autoshow=True, save2html=True):
 
     # Create figure
     fig = go.Figure()
@@ -19,7 +14,7 @@ def visualPrice(stock_no, autoshow=True, save2html=True):
 
     # Set title
     fig.update_layout(
-        title_text=fileName
+        title_text=stock_no
     )
 
     # Add range slider
@@ -59,7 +54,19 @@ def visualPrice(stock_no, autoshow=True, save2html=True):
     if save2html:
         if not os.path.isdir('html'):
             os.mkdir('html')
-        fig.write_html('html/' + fileName + '.html')
+        fig.write_html('html/' + stock_no + '.html')
+
+def visualPrice(stock_no, autoshow=True, save2html=True):
+    fileName = '{}.TW'.format(stock_no)
+    df = pd.read_csv('finished/{}.csv'.format(fileName))  
+    df = df.dropna()
+    plotPrice(df, stock_no,  autoshow, save2html)
+
+def visualPriceWithFile(path, stock_no, autoshow=True, save2html=True):
+    df = pd.read_csv(path)  
+    df = df.dropna()
+    plotPrice(df, stock_no,  autoshow, save2html)
+    
     
 def getAllCSV(folderPath):
     
@@ -71,8 +78,10 @@ def getAllCSV(folderPath):
         actfilenames.append(child)
     return actfilenames
 
+
 if __name__ == '__main__':
-    allf = getAllCSV('finished')
-    for f in allf:
-        stockN = f.split('.')[0]
-        visualPrice(stockN, autoshow=False, save2html=True)
+    # allf = getAllCSV('finished')
+    # for f in allf:
+    #     stockN = f.split('.')[0]
+    #     visualPrice(stockN, autoshow=True, save2html=True)
+    visualPriceWithFile('2317.TW_wk.csv', '2317', False, True)
