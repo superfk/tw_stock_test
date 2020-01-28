@@ -21,8 +21,8 @@ from stock_export import export2excel
 def get_stock_history(date, stock_no):
     quotes = []
     url = 'http://www.twse.com.tw/exchangeReport/STOCK_DAY?date=%s&stockNo=%s' % ( date, stock_no)
-    r = pxy.getRequest(url)
-    # r = requests.get(url)
+    # r = pxy.getRequest(url)
+    r = requests.get(url)
     data = r.json()
     return transform(data['data'])  #進行資料格式轉換
 
@@ -83,10 +83,10 @@ def genMonthArr(startDate, endDate):
 
     return m
 
-listDji = ['2354','2357','2454',1590,8454,6269,3034,6452,6456,6414,2723,3673,2049,3682,2498,2448,3189,5264,8150,2379,4958,9938,8464,6409,2353,2888,2101,2327,2376,2313,9914,2615,1722,2867,2106,1589,2451,2377,2392,1802,2542,2812,2809,2707,2347,9917,2206,9921,2352,1789,2103,3231,1434,2609,2610,6005,3037,2385,2603,2845,2849,2823,1262,1536,5871,9933,9945,2915,1717,2356,2204,1605,2618,2231,2059,9907,6176,1440,9910,2201,3702,1707,2015,2344,1477,2606,1227,2501,2834,1504,6239,2362,2449,1723,1319,5522,6285,2903,6415,2355,3044,2360]
+listDji = [2317,2330,2382,2823]
 []
-startDate = datetime.date(2010, 1, 1)
-endDate = datetime.date(2019, 11, 1)
+startDate = datetime.date(2019, 12, 1)
+endDate = datetime.datetime.now()
 mArray = genMonthArr(startDate, endDate)
 print(mArray)
 
@@ -94,7 +94,7 @@ reqCounts = 0
 sqldb = DB()
 
 for i in range(len(listDji)):
-    sqldb.connect('tw_{}.db'.format(listDji[i]))
+    sqldb.connect('database/tw_{}.db'.format(listDji[i]))
     for m in mArray:
         try:
             result = create_df(m, listDji[i])
@@ -104,10 +104,10 @@ for i in range(len(listDji)):
             #df = pd.read_sql_query('SELECT * FROM stock_price LIMIT 31 ORDER BY Index DESC',sqldb.conn)
             if reqCounts < 3:
                 reqCounts += 1
-                time.sleep(5+random.random()*5)
+                time.sleep(30+random.random()*5)
             else:
                 reqCounts = 0
-                time.sleep(5+random.random()*5)
+                time.sleep(30+random.random()*5)
             # print(result.groupby('month').close.count())  #每個月幾個營業日
             # print(result.groupby('month').shares.sum())  #每個月累計成交股數
 
@@ -117,7 +117,7 @@ for i in range(len(listDji)):
             print(e)
     try:
         sqldb.close()
-        export2excel('tw_{}'.format(listDji[i]), 'tw_{}'.format(listDji[i]))
+        export2excel('database/tw_{}'.format(listDji[i]), 'excel/tw_{}'.format(listDji[i]))
         print('export ok!')
         print('')
     except Exception as e:
