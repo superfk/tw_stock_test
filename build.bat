@@ -1,0 +1,2 @@
+pyinstaller getStockHistory_tws.py
+pause

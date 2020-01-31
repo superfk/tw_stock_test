@@ -83,24 +83,53 @@ def genMonthArr(startDate, endDate):
 
     return m
 
-listDji = [2317,2330,2382,2823]
-[]
-startDate = datetime.date(2019, 12, 1)
+def removeDuplicate(df_new, df_in_db):
+    df_new.reset_index(inplace = True)
+    print('reset df_new')
+    print(df_new)
+    df_in_db.reset_index()
+    print('reset df_in_db')
+    print(df_in_db)
+    df_in_db = df_in_db.append(df_new, sort=False, ignore_index=True)
+    print('append dataframe')
+    print(df_in_db)
+    print('')
+    df_in_db.drop_duplicates(subset =["shares","amount","turnover"], 
+                     keep = False, inplace = True) 
+    df_in_db.set_index('index', inplace=True)
+    return df_in_db
+
+
+stockNOs = [1101, 1102, 1216, 1301, 1303, 1326, 1402, 2002, 2105, 2207, 2301, 2303, 2308, 2327, 2357, 2395, 2408, 2412, 2454, 2474, 2633, 2801, 2881, 2882, 2883, 2884, 2885, 2886, 2887, 2888, 2890, 2891, 2892, 2912, 3008, 3045, 3711, 4904, 4938, 5871, 5876, 5880, 6505, 9904, 9910, 1210, 1227, 1229, 1319, 1434, 1476, 1477, 1504, 1536, 1590, 1605, 1707, 1722, 1723, 1802, 2027, 2049, 2059, 2101, 2104, 2201, 2227, 2231, 2313, 2324, 2337, 2344, 2345, 2347, 2353, 2354, 2356, 2360, 2371, 2376, 2377, 2379, 2383, 2385, 2404, 2409, 2439, 2448, 2449, 2451, 2492, 2498, 2542, 2603, 2606, 2610, 2615, 2618, 2809, 2812, 2845, 2867, 2889, 2903, 2915, 3005, 3023, 3034, 3037, 3044, 3231, 3406, 3443, 3481, 3532, 3533, 3682, 3702, 3706, 4958, 5269, 5522, 6176, 6213, 6239, 6269, 6285, 6409, 6415, 6456, 6669, 8046, 8341, 8454, 8464, 9914, 9917, 9921, 9933, 9941, 9945]
+
+startDate = datetime.datetime.now()
 endDate = datetime.datetime.now()
-mArray = genMonthArr(startDate, endDate)
-print(mArray)
+monthArr = genMonthArr(startDate, endDate)
+print(monthArr)
 
 reqCounts = 0
 sqldb = DB()
 
-for i in range(len(listDji)):
-    sqldb.connect('database/tw_{}.db'.format(listDji[i]))
-    for m in mArray:
+for i in range(len(stockNOs)):
+    sqldb.connect('database/tw_{}.db'.format(stockNOs[i]))
+    for m in monthArr:
         try:
-            result = create_df(m, listDji[i])
+            result = create_df(m, stockNOs[i])
+            print('new acquired data')
             print(result)
+            print('')
+            sql_str = '''
+            Select * FROM stock_price WHERE `index` >= '{}'
+            '''.format(result.index[0])
+            df_in_db = pd.read_sql(sql_str,sqldb.conn)
+            print('existed data in database')
+            print(df_in_db)
+            print('')
+            remain_df = removeDuplicate(result, df_in_db)
+            print('after removing')
+            print(remain_df)
 
-            result.to_sql(name='stock_price', con=sqldb.conn, if_exists='append')
+            # remain_df.to_sql(name='stock_price', con=sqldb.conn, if_exists='append')
             #df = pd.read_sql_query('SELECT * FROM stock_price LIMIT 31 ORDER BY Index DESC',sqldb.conn)
             if reqCounts < 3:
                 reqCounts += 1
@@ -115,9 +144,10 @@ for i in range(len(listDji)):
             print('')
             print('{} Error'.format(m))
             print(e)
+            time.sleep(30+random.random()*5)
     try:
         sqldb.close()
-        export2excel('database/tw_{}'.format(listDji[i]), 'excel/tw_{}'.format(listDji[i]))
+        export2excel('database/tw_{}'.format(stockNOs[i]), 'excel/tw_{}'.format(stockNOs[i]))
         print('export ok!')
         print('')
     except Exception as e:

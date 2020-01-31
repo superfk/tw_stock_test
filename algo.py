@@ -180,7 +180,7 @@ if __name__=='__main__':
     df.set_index('date', inplace=True)
     print('change index to date')
     print(df)
-    df = df[(df.index > '2010-02-01')]
+    df = df[(df.index > '2020-01-01')]
     print('filter by date')
     print(df)
 
