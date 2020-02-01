@@ -16,6 +16,8 @@ from sqlalchemy import create_engine
 from db_operation import DB
 import proxy as pxy
 from stock_export import export2excel
+import config as cfg
+import os
 
 #   http://www.twse.com.tw/exchangeReport/STOCK_DAY?date=20180817&stockNo=2330  取一個月的股價與成交量
 def get_stock_history(date, stock_no):
@@ -64,6 +66,16 @@ def create_df(date,stock_no):
     s2['month'] = mlist  #新增月份欄位
     return s2
 
+def lastMonth(sourcedate):
+    cur_m = sourcedate.month
+    last_m = cur_m - 1
+    last_y = sourcedate.year
+    if last_m == 0:
+        last_m = 12
+        last_y -= 1
+    return datetime.date(last_y, last_m, 1)
+
+
 def add_months(sourcedate, months):
     month = sourcedate.month - 1 + months
     year = sourcedate.year + month // 12
@@ -99,19 +111,22 @@ def removeDuplicate(df_new, df_in_db):
     df_in_db.set_index('index', inplace=True)
     return df_in_db
 
+stockNOs = cfg.get_stocks()
 
-stockNOs = [1101, 1102, 1216, 1301, 1303, 1326, 1402, 2002, 2105, 2207, 2301, 2303, 2308, 2327, 2357, 2395, 2408, 2412, 2454, 2474, 2633, 2801, 2881, 2882, 2883, 2884, 2885, 2886, 2887, 2888, 2890, 2891, 2892, 2912, 3008, 3045, 3711, 4904, 4938, 5871, 5876, 5880, 6505, 9904, 9910, 1210, 1227, 1229, 1319, 1434, 1476, 1477, 1504, 1536, 1590, 1605, 1707, 1722, 1723, 1802, 2027, 2049, 2059, 2101, 2104, 2201, 2227, 2231, 2313, 2324, 2337, 2344, 2345, 2347, 2353, 2354, 2356, 2360, 2371, 2376, 2377, 2379, 2383, 2385, 2404, 2409, 2439, 2448, 2449, 2451, 2492, 2498, 2542, 2603, 2606, 2610, 2615, 2618, 2809, 2812, 2845, 2867, 2889, 2903, 2915, 3005, 3023, 3034, 3037, 3044, 3231, 3406, 3443, 3481, 3532, 3533, 3682, 3702, 3706, 4958, 5269, 5522, 6176, 6213, 6239, 6269, 6285, 6409, 6415, 6456, 6669, 8046, 8341, 8454, 8464, 9914, 9917, 9921, 9933, 9941, 9945]
-
-startDate = datetime.datetime.now()
+startDate = lastMonth(datetime.datetime.now())
+# startDate = datetime.date(2020, 1, 1)
 endDate = datetime.datetime.now()
 monthArr = genMonthArr(startDate, endDate)
 print(monthArr)
 
 reqCounts = 0
 sqldb = DB()
+delaytime = cfg.get_delay()
+dbfolder = cfg.get_db_folder()
 
 for i in range(len(stockNOs)):
-    sqldb.connect('database/tw_{}.db'.format(stockNOs[i]))
+    dbpath = os.path.join(dbfolder,'tw_{}.db'.format(stockNOs[i]))
+    sqldb.connect(dbpath)
     for m in monthArr:
         try:
             result = create_df(m, stockNOs[i])
@@ -129,30 +144,28 @@ for i in range(len(stockNOs)):
             print('after removing')
             print(remain_df)
 
-            # remain_df.to_sql(name='stock_price', con=sqldb.conn, if_exists='append')
+            remain_df.to_sql(name='stock_price', con=sqldb.conn, if_exists='append')
             #df = pd.read_sql_query('SELECT * FROM stock_price LIMIT 31 ORDER BY Index DESC',sqldb.conn)
             if reqCounts < 3:
                 reqCounts += 1
-                time.sleep(30+random.random()*5)
+                time.sleep(delaytime+random.random()*5)
             else:
                 reqCounts = 0
-                time.sleep(30+random.random()*5)
+                time.sleep(delaytime+random.random()*5)
             # print(result.groupby('month').close.count())  #每個月幾個營業日
             # print(result.groupby('month').shares.sum())  #每個月累計成交股數
 
         except Exception as e:
             print('')
             print('{} Error'.format(m))
-            print(e)
-            time.sleep(30+random.random()*5)
+            time.sleep(delaytime+random.random()*5)
     try:
         sqldb.close()
-        export2excel('database/tw_{}'.format(stockNOs[i]), 'excel/tw_{}'.format(stockNOs[i]))
+        export2excel(dbpath, 'excel/tw_{}'.format(stockNOs[i]))
         print('export ok!')
         print('')
     except Exception as e:
         print(e)
-
 
 
 
