@@ -113,9 +113,11 @@ def removeDuplicate(df_new, df_in_db):
 
 stockNOs = cfg.get_stocks()
 
-startDate = lastMonth(datetime.datetime.now())
-# startDate = datetime.date(2020, 1, 1)
-endDate = datetime.datetime.now()
+# startDate = lastMonth(datetime.datetime.now())
+# startDate = datetime.date(2020, 6, 1)
+queryDates = cfg.get_dates()
+startDate = queryDates['start']
+endDate = queryDates['end']
 monthArr = genMonthArr(startDate, endDate)
 print(monthArr)
 

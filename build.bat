@@ -1,2 +1,2 @@
-pyinstaller getStockHistory_tws.py
+pyinstaller --onefile build.spec --distpath .\build
 pause

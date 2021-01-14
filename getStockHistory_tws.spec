@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['getStockHistory_tws.py'],
-             pathex=['D:\\03_Coding\\web\\tw_stock_test'],
+             pathex=['C:\\Users\\shawn\\Google Drive\\00_BareissHome\\10_Coding\\tw_stock_test'],
              binaries=[],
              datas=[],
              hiddenimports=[],

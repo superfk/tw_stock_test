@@ -1,0 +1,11 @@
+numpy
+requests
+pandas
+python-dateutil
+sqlalchemy
+js2py
+loguru
+pyquery
+bs4
+matplotlib
+plotly
