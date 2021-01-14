@@ -2,3 +2,4 @@ DailyUpdateStock
 dist
 venv
 build
+__pycache__
