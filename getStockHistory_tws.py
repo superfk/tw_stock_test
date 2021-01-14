@@ -17,7 +17,7 @@ from db_operation import DB
 import proxy as pxy
 from stock_export import export2excel
 import config as cfg
-import os
+import os, traceback
 
 #   http://www.twse.com.tw/exchangeReport/STOCK_DAY?date=20180817&stockNo=2330  取一個月的股價與成交量
 def get_stock_history(date, stock_no):
@@ -53,7 +53,7 @@ def create_df(date,stock_no):
                 #"日期","成交股數","成交金額","開盤價","最高價","最低價","收盤價","漲跌價差","成交筆數" 
     stock = []
     for i in range(len(s)):
-        stock.append(stock_no)
+        stock.append(str(stock_no))
     s['stockno'] = pd.Series(stock ,index=s.index)  #新增股票代碼欄，之後所有股票進入資料表才能知道是哪一張股票
     datelist = []
     for i in range(len(s)):
@@ -128,10 +128,31 @@ dbfolder = cfg.get_db_folder()
 
 for i in range(len(stockNOs)):
     dbpath = os.path.join(dbfolder,'tw_{}.db'.format(stockNOs[i]))
+    location = 'data'
+    table_name = 'table_name'
+
     sqldb.connect(dbpath)
+    cursor = sqldb.conn.cursor() 
+    sql_str = '''
+            CREATE TABLE IF NOT EXISTS stock_price (
+                "index" TIMESTAMP PRIMARY KEY,
+                shares INTEGER,
+                amount INTEGER,
+                open REAL,
+                high REAL,
+                low REAL,
+                close REAL,
+                change REAL,
+                turnover INTEGER,
+                stockno TEXT,
+                month integer
+            );
+            '''
+    cursor.execute(sql_str)
+    sqldb.conn.commit()
     for m in monthArr:
         try:
-            result = create_df(m, stockNOs[i])
+            result = create_df(m, f"{stockNOs[i]}")
             print('new acquired data')
             print(result)
             print('')
@@ -158,8 +179,10 @@ for i in range(len(stockNOs)):
             # print(result.groupby('month').shares.sum())  #每個月累計成交股數
 
         except Exception as e:
+            errorMsg = traceback.format_exc()
             print('')
             print('{} Error'.format(m))
+            print(f'{errorMsg}')
             time.sleep(delaytime+random.random()*5)
     try:
         sqldb.close()

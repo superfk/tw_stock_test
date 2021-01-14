@@ -8,6 +8,9 @@ import datetime as dt
 import numpy as np
 from stock_export import export2dataframe
 from visualization import plotPrice
+import config as cfg
+import os
+
 
 #計算MA線
 def day2week(df):
@@ -174,13 +177,15 @@ if __name__=='__main__':
     stock_no = 2317
     # df = pd.read_csv('finished\\{}.TW.csv'.format(stock_no), parse_dates=['Date'], index_col=0).dropna()
     # df = pd.read_csv('2317.TW_wk.csv', parse_dates=['Date'], index_col=0).dropna()
-    df = export2dataframe('database/tw_{}'.format(stock_no))
+    dbfolder = cfg.get_db_folder()
+    dbpath = os.path.join(dbfolder,'tw_{}.db'.format(stock_no))
+    df = export2dataframe(dbpath)
     df = df.dropna()
     df = df.rename(columns = {'index':'date', 'turnover':'volume'})
     df.set_index('date', inplace=True)
     print('change index to date')
     print(df)
-    df = df[(df.index > '2020-01-01')]
+    df = df[(df.index > '2010-01-01')]
     print('filter by date')
     print(df)
 

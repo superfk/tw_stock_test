@@ -9,3 +9,5 @@ pyquery
 bs4
 matplotlib
 plotly
+pyinstaller
+openpyxl

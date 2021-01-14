@@ -9,7 +9,7 @@ reference https://github.com/Asoul/tsrtc for detail
 suck http://mis.twse.com.tw/stock/api/getStockInfo.jsp?json=1&delay=0&ex_ch=%20tse_1101.tw|tse_0050.tw
 '''
 import time
-import json
+import json, csv
 import requests
 import sys
 import time, random
@@ -39,8 +39,12 @@ def show_realtime(*stock_id):
 
 
 if __name__ == '__main__':
-    for i in range(20):
-        print (show_realtime('2330','6330'))
-        print (time.strftime("%H:%M:%S"))
-        time.sleep(random.random())
+    with open('stockList.csv', newline='') as csvfile:
+        # 讀取 CSV 檔案內容
+        rows = csv.reader(csvfile)
+        # 以迴圈輸出每一列
+        l = []
+        for row in rows:
+            l.append(row[0])
+        print(','.join(l))
     
