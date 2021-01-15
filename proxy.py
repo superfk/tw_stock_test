@@ -221,7 +221,8 @@ def getRequest(url=f'https://www.google.com/'):
         if proxy is None:
             # proxy = getProxy()
             prxy = ProxyExample()
-            prxy.prepareValidProxies()
+            prxy.prepareValidProxies2()
+            prxy.verify_proxy()
             proxy, scheme = prxy.random_get_proxy()
             print(proxy, scheme)
         try:

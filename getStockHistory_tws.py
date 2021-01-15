@@ -157,7 +157,7 @@ reqCounts = 0
 sqldb = DB()
 delaytime = cfg.get_delay()
 dbfolder = cfg.get_db_folder()
-RANDOMSEC = 1
+RANDOMSEC = 5
 
 for i in range(len(stockNOs)):
     dbpath = os.path.join(dbfolder, 'tw_{}.db'.format(stockNOs[i]))
