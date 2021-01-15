@@ -11,11 +11,13 @@ import csv
 import datetime
 import os
 import random
+import scrapy
+from bs4 import BeautifulSoup
+import subprocess
+from proxy_example import ProxyExample
 
 now = datetime.datetime.now()
 proxies = []
-
-
 
 
 def getProxiesFromProxyNova():
@@ -40,7 +42,8 @@ def getProxiesFromProxyNova():
         loguru.logger.warning(f'getProxiesFromProxyNova: downloading...')
         response = requests.get(url)
         if response.status_code != 200:
-            loguru.logger.debug(f'getProxiesFromProxyNova: status code is not 200')
+            loguru.logger.debug(
+                f'getProxiesFromProxyNova: status code is not 200')
             continue
         loguru.logger.success(f'getProxiesFromProxyNova: downloaded.')
         d = pyquery.PyQuery(response.text)
@@ -65,10 +68,12 @@ def getProxiesFromProxyNova():
             proxy = f'{ip}:{port}'
             proxies.append(proxy)
         loguru.logger.success(f'getProxiesFromProxyNova: scanned.')
-        loguru.logger.debug(f'getProxiesFromProxyNova: {len(proxies)} proxies is found.')
+        loguru.logger.debug(
+            f'getProxiesFromProxyNova: {len(proxies)} proxies is found.')
         # 每取得一個國家代理清單就休息一秒，避免頻繁存取導致代理清單網站封鎖
         time.sleep(1)
     return proxies
+
 
 def getProxiesFromGatherProxy():
     proxies = []
@@ -91,7 +96,8 @@ def getProxiesFromGatherProxy():
         loguru.logger.warning(f'getProxiesFromGatherProxy: downloading...')
         response = requests.get(url)
         if response.status_code != 200:
-            loguru.logger.debug(f'getProxiesFromGatherProxy: status code is not 200')
+            loguru.logger.debug(
+                f'getProxiesFromGatherProxy: status code is not 200')
             continue
         loguru.logger.success(f'getProxiesFromGatherProxy: downloaded.')
         d = pyquery.PyQuery(response.text)
@@ -113,10 +119,12 @@ def getProxiesFromGatherProxy():
             proxy = f'{ip}:{port}'
             proxies.append(proxy)
         loguru.logger.success(f'getProxiesFromGatherProxy: scanned.')
-        loguru.logger.debug(f'getProxiesFromGatherProxy: {len(proxies)} proxies is found.')
+        loguru.logger.debug(
+            f'getProxiesFromGatherProxy: {len(proxies)} proxies is found.')
         # 每取得一個國家代理清單就休息一秒，避免頻繁存取導致代理清單網站封鎖
         time.sleep(1)
     return proxies
+
 
 def getProxiesFromFreeProxyList():
     proxies = []
@@ -125,7 +133,8 @@ def getProxiesFromFreeProxyList():
     loguru.logger.warning(f'getProxiesFromFreeProxyList: downloading...')
     response = requests.get(url)
     if response.status_code != 200:
-        loguru.logger.debug(f'getProxiesFromFreeProxyList: status code is not 200')
+        loguru.logger.debug(
+            f'getProxiesFromFreeProxyList: status code is not 200')
         return
     loguru.logger.success(f'getProxiesFromFreeProxyList: downloaded.')
     d = pyquery.PyQuery(response.text)
@@ -142,11 +151,9 @@ def getProxiesFromFreeProxyList():
         proxy = f'{ip}:{port}'
         proxies.append(proxy)
     loguru.logger.success(f'getProxiesFromFreeProxyList: scanned.')
-    loguru.logger.debug(f'getProxiesFromFreeProxyList: {len(proxies)} proxies is found.')
+    loguru.logger.debug(
+        f'getProxiesFromFreeProxyList: {len(proxies)} proxies is found.')
     return proxies
-
-
-
 
 
 # 隨機取出一組代理
@@ -161,6 +168,7 @@ def getProxy():
     loguru.logger.debug(f'getProxy: {len(proxies)} proxies is unused.')
     return proxy
 
+
 def reqProxies(hour):
     global proxies
     # proxies = proxies + getProxiesFromProxyNova()
@@ -168,6 +176,7 @@ def reqProxies(hour):
     proxies = proxies + getProxiesFromFreeProxyList()
     proxies = list(dict.fromkeys(proxies))
     loguru.logger.debug(f'reqProxies: {len(proxies)} proxies is found.')
+
 
 def getProxies():
     global proxies
@@ -199,17 +208,22 @@ def getProxies():
         loguru.logger.success(f'getProxies: {filename} is saved.')
 
 
-
 # 用於保存上一次連線請求成功時用的代理資訊
 proxy = None
+scheme = 'https'
 
-def getRequest(url = f'https://www.google.com/'):
-    global proxy
+
+def getRequest(url=f'https://www.google.com/'):
+    global proxy, scheme
     # 持續更換代理直到連線請求成功為止
     while True:
         # 若無上一次連線請求成功的代理資訊，則重新取出一組代理資訊
         if proxy is None:
-            proxy = getProxy()
+            # proxy = getProxy()
+            prxy = ProxyExample()
+            prxy.prepareValidProxies()
+            proxy, scheme = prxy.random_get_proxy()
+            print(proxy, scheme)
         try:
             # url = f'https://www.google.com/'
             loguru.logger.info(f'testRequest: url is {url}')
@@ -218,7 +232,7 @@ def getRequest(url = f'https://www.google.com/'):
                 url,
                 # 指定 HTTPS 代理資訊
                 proxies={
-                    'https': f'https://{proxy}'
+                    f"{scheme}": f'{proxy}'
                 },
                 # 指定連限逾時限制
                 timeout=5
@@ -229,22 +243,26 @@ def getRequest(url = f'https://www.google.com/'):
                 proxy = None
                 continue
             loguru.logger.success(f'testRequest: downloaded.')
-            
+
         # 發生以下各種例外時，清除代理資訊，繼續下個迴圈
         except requests.exceptions.ConnectionError:
-            loguru.logger.error(f'testRequest: proxy({proxy}) is not working (connection error).')
+            loguru.logger.error(
+                f'testRequest: proxy({proxy}) is not working (connection error).')
             proxy = None
             continue
         except requests.exceptions.ConnectTimeout:
-            loguru.logger.error(f'testRequest: proxy({proxy}) is not working (connect timeout).')
+            loguru.logger.error(
+                f'testRequest: proxy({proxy}) is not working (connect timeout).')
             proxy = None
             continue
         except requests.exceptions.ProxyError:
-            loguru.logger.error(f'testRequest: proxy({proxy}) is not working (proxy error).')
+            loguru.logger.error(
+                f'testRequest: proxy({proxy}) is not working (proxy error).')
             proxy = None
             continue
         except requests.exceptions.SSLError:
-            loguru.logger.error(f'testRequest: proxy({proxy}) is not working (ssl error).')
+            loguru.logger.error(
+                f'testRequest: proxy({proxy}) is not working (ssl error).')
             proxy = None
             continue
         except Exception as e:
@@ -254,7 +272,7 @@ def getRequest(url = f'https://www.google.com/'):
             continue
         # 成功完成請求，離開迴圈
         return response
-    
+
 
 if __name__ == '__main__':
     r = getRequest()

@@ -11,3 +11,5 @@ matplotlib
 plotly
 pyinstaller
 openpyxl
+html5lib
+scrapy
