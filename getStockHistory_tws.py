@@ -128,8 +128,6 @@ dbfolder = cfg.get_db_folder()
 
 for i in range(len(stockNOs)):
     dbpath = os.path.join(dbfolder,'tw_{}.db'.format(stockNOs[i]))
-    location = 'data'
-    table_name = 'table_name'
 
     sqldb.connect(dbpath)
     cursor = sqldb.conn.cursor() 
