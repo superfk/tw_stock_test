@@ -1,0 +1,5 @@
+[
+{"scheme": "https", "proxy": "https://162.144.48.139:3838", "port": "3838"},
+{"scheme": "https", "proxy": "https://51.81.82.175:80", "port": "80"},
+{"scheme": "https", "proxy": "https://167.99.225.217:8080", "port": "8080"}
+]
