@@ -39,7 +39,7 @@ def show_realtime(*stock_id):
 
 
 if __name__ == '__main__':
-    with open('stockList.csv', newline='') as csvfile:
+    with open('stockList_us.csv', newline='') as csvfile:
         # 讀取 CSV 檔案內容
         rows = csv.reader(csvfile)
         # 以迴圈輸出每一列

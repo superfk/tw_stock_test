@@ -13,3 +13,4 @@ pyinstaller
 openpyxl
 html5lib
 scrapy
+pandas_datareader

@@ -39,6 +39,11 @@ def get_dates(path='config.json'):
         date_end = datetime.datetime.strptime(date_end, r'%Y-%m-%d').date()
     return {'start': date_start, 'end':date_end}
 
+def get_country(path='config.json'):
+    config = read_system_config(path)
+    country = config['country']
+    return country
+
 if __name__ == "__main__":
     config = read_system_config()
     print(config)
