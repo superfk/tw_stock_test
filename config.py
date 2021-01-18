@@ -11,7 +11,8 @@ def write_system_config(path, data):
 
 def get_stocks(path='config.json'):
     config = read_system_config(path)
-    stocks = config['stocks'].split(',')
+    stocksSelection = config['stocks']
+    stocks = config[f'stocks_{stocksSelection}'].split(',')
     stocks = [x.strip() for x in stocks]
     return stocks
 
@@ -45,8 +46,5 @@ def get_country(path='config.json'):
     return country
 
 if __name__ == "__main__":
-    config = read_system_config()
-    print(config)
-    stocks = config['stocks'].split(',')
-    stocks = [x.strip() for x in stocks]
+    stocks = get_stocks()
     print(stocks)
