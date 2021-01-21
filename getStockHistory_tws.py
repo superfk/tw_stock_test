@@ -234,12 +234,31 @@ class YahooStock(TWStock):
         stockNoCode = stockNo
         if self.country == 'tw':
             stockNoCode = f"{stockNo}.tw"
-
-        df = web.DataReader(f"{stockNoCode}", 'yahoo',
-                            start=startDate, end=endDate)
-        df.reset_index(inplace=True)
-        print(df)
-        return df
+            try:
+                df = web.DataReader(f"{stockNoCode}", 'yahoo',
+                                start=startDate, end=endDate)
+                                
+                df.reset_index(inplace=True)
+                
+                return df
+            except:
+                stockNoCode = f"{stockNo}.two"
+                df = web.DataReader(f"{stockNoCode}", 'yahoo',
+                                start=startDate, end=endDate)
+                                
+                df.reset_index(inplace=True)
+                
+                return df
+        else:
+            try:
+                df = web.DataReader(f"{stockNoCode}", 'yahoo',
+                                start=startDate, end=endDate)
+                                
+                df.reset_index(inplace=True)
+                
+                return df
+            except:
+                print('Not Found Stock No.')
 
     def arrange(self, df, stock_no):
         df.columns = self.columns
