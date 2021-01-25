@@ -34,7 +34,7 @@ class TWStock():
         self.sqldb = DB()
         self.delaytime = cfg.get_delay()
         self.dbfolder = cfg.get_db_folder()
-        self.rndDelay = 1
+        self.rndDelay = 0.1
         self.columns = ['date', 'shares', 'amount', 'open',
                         'high', 'low', 'close', 'change', 'turnover']
         self.reqCounts = 0
@@ -284,7 +284,6 @@ class YahooStock(TWStock):
                 sql_str = '''
                 Select * FROM stock_price WHERE `date` >= '{}'
                 '''.format(result.index[0])
-                print(sql_str)
                 df_in_db = pd.read_sql(sql_str, self.sqldb.conn)
                 print('existed data in database')
                 print(df_in_db)
@@ -309,6 +308,7 @@ class YahooStock(TWStock):
 
     def removeDuplicate(self, df_new, df_in_db):
         df_new.reset_index(inplace=True)
+        df_new['date'] = pd.to_datetime(df_new['date']).dt.strftime('%Y-%m-%d %H:%M:%S')
         print('reset df_new')
         print(df_new)
         df_in_db.reset_index()
@@ -316,9 +316,9 @@ class YahooStock(TWStock):
         print(df_in_db)
         df_in_db = df_in_db.append(df_new, sort=False, ignore_index=True)
         print('append dataframe')
-        print(df_in_db)
+        print(df_in_db.tail(30))
         print('')
-        df_in_db.drop_duplicates(subset=["volume", "open", "close"],
+        df_in_db.drop_duplicates(subset=["date"],
                                  keep=False, inplace=True)
         df_in_db.set_index('date', inplace=True)
         df_in_db = df_in_db.drop(['index'], axis=1)
