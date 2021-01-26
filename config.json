@@ -1,7 +1,7 @@
 {
-    "stocks": "us",
-    "delay" : 0.5,
-    "country": "us",
+    "stocks": "tw",
+    "delay" : 0.1,
+    "country": "tw",
     "db_folder": "./database",
     "date_start": "2010-01-04",
     "date_end": "now",

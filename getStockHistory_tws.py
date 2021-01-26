@@ -7,7 +7,7 @@
 import numpy as np
 import requests
 import pandas as pd
-import datetime
+import datetime, time
 from dateutil import relativedelta
 import calendar
 import time
@@ -19,9 +19,15 @@ from stock_export import export2excel
 import config as cfg
 import os
 import traceback
+import asyncio
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from pandas_datareader import data as web
 
+
+dbFolder = os.path.join(cfg.get_db_folder(), 'yahoo',  cfg.get_country())
+if not os.path.exists(dbFolder):
+    os.makedirs(dbFolder)
 
 class TWStock():
     def __init__(self):
@@ -42,9 +48,9 @@ class TWStock():
         self.financeType = 'twse'
 
     def prepareFolder(self, stockNo):
-        dbFolder = os.path.join(self.dbfolder, self.financeType,  self.country)
-        if not os.path.exists(dbFolder):
-            os.makedirs(dbFolder)
+        # dbFolder = os.path.join(self.dbfolder, self.financeType,  self.country)
+        # if not os.path.exists(dbFolder):
+        #     os.makedirs(dbFolder)
         return os.path.join(dbFolder, f'{self.country}_{stockNo}.db')
 
     def openDb(self, stockNo):
@@ -273,26 +279,30 @@ class YahooStock(TWStock):
         return df
 
     def run(self, stockNo, use_proxy=False):
+        startT = time.time()
         while True:
             try:
+                print(f'running {stockNo} stock')
                 result = self.get_stock_history(
                     stockNo=stockNo, startDate=self.startDate, endDate=self.endDate, use_proxy=use_proxy)
                 result = self.arrange(result, stockNo)
-                print('new acquired data')
-                print(result)
-                print('')
+
                 sql_str = '''
                 Select * FROM stock_price WHERE `date` >= '{}'
                 '''.format(result.index[0])
+
                 df_in_db = pd.read_sql(sql_str, self.sqldb.conn)
-                print('existed data in database')
-                print(df_in_db)
-                print('')
+                
                 remain_df = self.removeDuplicate(result, df_in_db)
-                print('after removing')
-                print(remain_df)
+                
+                # print(remain_df)
                 remain_df.to_sql(
                     name='stock_price', con=self.sqldb.conn, if_exists='append', chunksize=250)
+                
+                endT = time.time()
+                exeT = endT - startT
+                print(f'finished {stockNo} stock, executed time is {exeT}')
+                return True
             except:
                 errorMsg = traceback.format_exc()
                 print('')
@@ -304,34 +314,52 @@ class YahooStock(TWStock):
                 else:
                     self.reqCounts = 0
                     time.sleep(self.delaytime+random.random()*self.rndDelay)
-                    break
+                    return False
 
     def removeDuplicate(self, df_new, df_in_db):
         df_new.reset_index(inplace=True)
         df_new['date'] = pd.to_datetime(df_new['date']).dt.strftime('%Y-%m-%d %H:%M:%S')
-        print('reset df_new')
-        print(df_new)
         df_in_db.reset_index()
-        print('reset df_in_db')
-        print(df_in_db)
         df_in_db = df_in_db.append(df_new, sort=False, ignore_index=True)
-        print('append dataframe')
-        print(df_in_db.tail(30))
-        print('')
         df_in_db.drop_duplicates(subset=["date"],
                                  keep=False, inplace=True)
         df_in_db.set_index('date', inplace=True)
         df_in_db = df_in_db.drop(['index'], axis=1)
         return df_in_db
 
+def run_instance(stockNo):
+    st = YahooStock()
+    st.openDb(stockNo)
+    result = st.run(stockNo)
+    st.closeDb()
+    return result, stockNo
+        
 
 def main():
     # st = TWStock()
-    st = YahooStock()
-    for s in st.stockNOs:
-        st.openDb(s)
-        st.run(s)
-        st.closeDb()
+    # tasks = [run_instance(s) for s in cfg.get_stocks()]
+    # results = await asyncio.gather(*tasks, return_exceptions=True)
+    startT = time.time()
+    workers = 20
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = []
+        for s in cfg.get_stocks():
+            future = executor.submit(run_instance, s)
+            print(type(future))
+            futures.append(future)
+        totalStocks = len(futures)
+        success_tasks = 0
+        invalidTasks = []
+        for future in as_completed(futures):
+            success, stkNo = future.result()
+            if success:
+                success_tasks += 1
+            else:
+                invalidTasks.append(stkNo)
+    endT = time.time()
+    exeT = endT - startT
+    invalidStk = ",".join(invalidTasks)
+    print(f"executed time: {exeT} s for {workers} workers, successTasks {success_tasks}/{totalStocks}, invalid stock: {invalidStk}")
 
 if __name__ == '__main__':
     main()
