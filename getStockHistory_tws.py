@@ -20,7 +20,7 @@ import config as cfg
 import os
 import traceback
 import asyncio
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed, ProcessPoolExecutor
 
 from pandas_datareader import data as web
 
@@ -48,10 +48,10 @@ class TWStock():
         self.financeType = 'twse'
 
     def prepareFolder(self, stockNo):
-        # dbFolder = os.path.join(self.dbfolder, self.financeType,  self.country)
+        dbFolder = os.path.join(self.dbfolder, self.financeType,  self.country)
         # if not os.path.exists(dbFolder):
         #     os.makedirs(dbFolder)
-        return os.path.join(dbFolder, f'{self.country}_{stockNo}.db')
+        return os.path.join(dbFolder, f'{stockNo}.db')
 
     def openDb(self, stockNo):
         dbpath = self.prepareFolder(stockNo)
@@ -340,7 +340,7 @@ def main():
     # tasks = [run_instance(s) for s in cfg.get_stocks()]
     # results = await asyncio.gather(*tasks, return_exceptions=True)
     startT = time.time()
-    workers = 20
+    workers = 24
     with ThreadPoolExecutor(max_workers=workers) as executor:
         futures = []
         for s in cfg.get_stocks():
